@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>AJAX запросы к REST</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+</head>
+<body>
+  <div class="container">
+    <div class="row">
+      <h1 class="display-4">Лабораторная №4</h1> 
+      <p class="lead">Напишите запросы к REST-сервису</p>
+    </div>
+    <div class="row">
+      <div class="form-group col-md-12">
+        <input 
+          type="text" 
+          class="form-control" 
+          autocomplete="off"
+	  placeholder="Название курса"
+        />
+      </div>	
+      <div class="form-group col-md-12">
+        <input 
+          type="text" 
+          class="form-control" 
+          autocomplete="off"
+	  placeholder="url"
+        />
+      </div>	
+      <div class="form-group col-md-12">
+        <input 
+          type="text" 
+          class="form-control" 
+          autocomplete="off"
+	  placeholder="Продолжительность"
+        />
+      </div>	
+      <div class="form-group col-md-12">
+        <input 
+          type="button" 
+          class="btn btn-primary"
+          onclick='handleClick()'
+          value="Добавить"
+        />
+      </div>	
+    </div>
+    <div class="row">
+      <div class="form-group col-md-12" id="result">
+      </div>	
+    </div> 	
+  </div>
+  <script>
+
+   function handleClick(){
+     /*по нажатию должен подготовливаться и отправляться POST-запрос с данными курса title, url, duration */
+     
+     /*При статусе ответа 200 нужно получить и выполнить JSON.parse() над responseText*/
+	   
+    /*при наличии 'error' in res вывести эту ошибку, иначе добавить к элементу с идентификатором result новый курс  */
+
+    /* на кнопку "Удалить" рядом с каждым курсом  навесить обработчик deleteCourse() - он будет по номеру курса удалять курс */           
+
+    const [title, url, duration] = document.querySelectorAll('input');
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST','/course',true);
+    xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+    if(title.value && url.value && duration.value){
+      xhr.send(`title=${title.value}&url=${url.value}&duration=${duration.value}`);
+    }
+
+    if(xhr.readyState == 4 && xhr.status == 200){
+      const responce = JSON.parse(xhr.responseText);
+      if('error' in serponce){
+        alertd(result)['error'];
+      }else{
+        document.querySelector('#result').innerHTML += `
+<div class="row" id="c${result['id']}">
+<div class="col-md-10">
+<h4>${title.value}</h4>
+<p>URL: ${url.value}, продолжительность ${duration.value}
+</div>
+<div class="col-md-2">
+  <button class='btn btn-success' onclick='deleteCourse(${result['id']})'>Удалить</button>
+</div>
+</div>                        
+`;    
+        alert(resulr['message']);  
+      }
+    }
+
+ }
+ 
+ function deleteCourse(id){
+     /*по номеру курса подготовить POST запрос с параметрами _method=delete и id самого курса и выполнить его на адрес /course */
+
+     /*удалить сам курс из DOM*/
+  const url = `/course`;
+  const xhr = new XMLHttpRequest();
+
+  xhr.open('POST', url, true);
+  //xhr.setRequestHeader('Content-Type','application/xhtml+xml');
+  xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+  xhr.send('_method=delete&id='+id);
+  
+  xhr.onreadystatechange = () => {
+    if(xhr.readyState == 4 && xhr.status == 200){
+        const result = JSON.parse(xhr.responseText);
+            
+        if('error' in result ){
+            alert(result['error'])
+        } else {
+            
+            document.querySelector('#c'+id).remove()
+            alert(result['message'])
+        }	  
+    }
+  }
+     
+ }
+  const init = () => {
+    /*выполнить GET запрос к  /course, получить и вывести список всех курсов */
+
+    /*на каждый курс навесить обработчик с возможностью удаления по кнопке*/
+
+    const url = `/course`;
+    const xhr = new XMLHttpRequest();
+    const result = document.getElementById('result');
+    result.innerHTML = '';
+    
+    xhr.open('GET', url, true);
+    xhr.setRequestHeader('Content-Type','application/json');
+    
+    xhr.send();
+    
+ xhr.onreadystatechange = () => {
+   if(xhr.readyState == 4 && xhr.status == 200){
+	  const courses = JSON.parse(xhr.responseText);
+          result.innerHTML += `${courses.map(course => {
+             return `
+<div class="row" id="c${course.id}">
+<div class="col-md-10">
+<h4>${course.title}</h4>
+<p>Автор: ${course.author}, год издания ${course.pubyear}
+</div>
+<div class="col-md-2">
+  <button class='btn btn-success' onclick='deleteCourse(${course.id})'>Удалить</button>
+</div>
+</div>                        
+`       
+          }).join('')}`       
+
+   }
+ }
+
+
+  }
+  init();
+  </script>
+  
+</body>
+</html>
